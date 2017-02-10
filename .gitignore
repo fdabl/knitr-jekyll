@@ -1,5 +1,8 @@
-.Rproj.user
-.Rhistory
-.RData
+.jekyll-metadata
+.htaccess
+.DS_Store
+.sass-cache
+Gemfile.lock
 _site/
-.sass-cache/
+_drafts/
+.Rproj.user
