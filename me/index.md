@@ -11,8 +11,8 @@ Tom Griffiths is even calling for a [new (computational) cognitive revolution](h
 
 This interest lead me to the wonderful city of Tübingen where I'm currently
 writing my thesis at Daimler Research & Development in pursuance of a Master's degree
-in Cognitive Science. During my studies, I've worked as a research assistant in the junior group of Michael Franke at the Department of Linguistics where I programmed interactive experiments for the web, helped with data analysis, and co-taught a class on Bayesian statistics. At the Department of Psychology, I too worked as a research assistant where I programmed a HTML5 experience sampling app and helped with the data analysis and automation.
+in Cognitive Science. During my studies, I've worked as a research assistant in the junior group of Michael Franke at the Department of Linguistics where I programmed interactive experiments for the web, helped with data analysis, and co-taught a class on Bayesian statistics. At the Department of Psychology, I too worked as a research assistant where I programmed a HTML5 experience sampling app and helped with data analysis and automation.
 
-I am passionate about open science, novel developments in methodology and applied statistics, and scientific publishing. Aligned with these interests I am an editor for the [Journal of European Psychology Students](http://jeps.efpsa.org/) where we implemented Registered Reports.
+I am passionate about open science, novel developments in methodology and applied statistics, and scientific publishing. Aligned with these interests, I am an editor for the [Journal of European Psychology Students](http://jeps.efpsa.org/) where we have, as one of the first journals, implemented *Registered Reports*.
 
-In my spare time, I'm meditating and learning to play the guitar.
+As hobbies, I like creating vegan dishes, meditating, running, and learning how to play the guitar.

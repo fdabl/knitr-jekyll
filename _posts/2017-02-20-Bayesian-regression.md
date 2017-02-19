@@ -30,6 +30,19 @@ straight line. In the visualisation below, we add the squared speed as an additi
 
 <img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-3-1.png" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" style="display: block; margin: auto;" />
 
+We can see the difference also by looking at the rate of change of $y$ as a function of $x$. For the straight line, the rate of change, i.e., the slope, is constant with
+
+$$
+\frac{\partial y}{\partial x} = \partial x \left( \beta_0 + \beta_1 \cdot x \right) = \beta_1
+$$
+
+while the quadratic function results in a rate of change that depends on the predictor $x$
+
+$$
+\frac{\partial y}{\partial x} = \partial x \left( \beta_0 + \beta_1 \cdot x + \beta_2 \cdot x^2 \right) = \beta_1 + 2\beta_2 \cdot x
+$$
+
+
 Let's simplify the notation a bit. We can write a series of linear equations as a matrix multiplication, e.g.,
 
 $$
@@ -88,13 +101,15 @@ which follow from the [axioms of probability theory](https://en.wikipedia.org/wi
 $$
 \begin{split}
 p(\textbf{y}, \mathbf{\theta}) &= p(\textbf{y}, \mathbf{\theta}) \\
-p(\mathbf{\theta}|\textbf{y})p(\textbf{y}) &= p(\textbf{y}|\mathbf{\theta})p(\textbf{y}) \\[1.5ex]
+p(\mathbf{\theta}|\textbf{y})p(\textbf{y}) &= p(\textbf{y}|\mathbf{\theta})p(\textbf{y}) \\
 \underbrace{p(\mathbf{\theta}|\textbf{y})}_{\text{Posterior}} &= \frac{p(\textbf{y}|\mathbf{\theta})p(\mathbf{\theta})}{p(\textbf{y})} = 
 \frac{\overbrace{p(\textbf{y}|\mathbf{\theta})}^{\text{Likelihood}}\overbrace{p(\mathbf{\theta})}^{\text{Prior}}}{\underbrace{\int p(\textbf{y}|\mathbf{\theta})p(\mathbf{\theta}) \mathrm{d}\mathbf{\theta}}_{\text{Marginal Likelihood}}}
 \end{split}
 $$
 
-where $\mathbf{\theta}$ denotes our parameter vector and $\textbf{y}$ denotes the data we have collected. In theory, this is all there is to Bayesian statistics. In practice, of course, things are more intricate. First, we must specify the likelihood which links the data to the parameter vector, $p(\textbf{y}\|\mathbf{\theta})$, commonly called the statistical model --- this will be the focus of this blog post. Second, we must specify a prior probability over our parameter vector, $p(\mathbf{\theta})$, which is a novum compared to classical statistics. Third, we must apply Bayes' rule, which involves computing a possibly high-dimensional integral. For the latter task, we will utilize the probabilistic programming language [Stan](http://mc-stan.org/).
+where $\mathbf{\theta}$ denotes our parameter vector and $\textbf{y}$ denotes the data we have collected. In theory, this is all there is to Bayesian statistics. In practice, of course, things are more intricate. First, we must specify the likelihood which links the data to the parameter vector, $p(\textbf{y}\|\mathbf{\theta})$, commonly called the statistical model --- this will be the focus of this blog post. Second, we must specify a prior probability over our parameter vector, $p(\mathbf{\theta})$, which is a novum compared to classical statistics; see the figure below for a comparison of three prior distributions. Third, we must apply Bayes' rule, which involves computing a possibly high-dimensional integral. For the latter task, we will utilize the probabilistic programming language [Stan](http://mc-stan.org/).
+
+<img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display: block; margin: auto;" />
 
 For the linear model, Bayes' rule amounts to
 
@@ -117,8 +132,8 @@ We write a convenience function that just takes the dependent variable and the p
 library('rstan')
 options(mc.cores = parallel::detectCores())
 
-run_model <- function(y, X, ms, ...) {
-  stan_dat <- list('y' = y, 'X' = X, 'N' = length(y), 'p' = nrow(X))
+run_model <- function(y, X, ms, save = TRUE, ...) {
+  stan_dat <- list('y' = y, 'X' = X, 'N' = length(y), 'p' = ncol(X))
   fit <- stan(
     data = stan_dat,
     model_code = ms,
@@ -134,26 +149,21 @@ The Stan specification of the linear model is
 {% highlight r %}
 ms_lm <- '
 data {
-  int<lower = 1> p;
-  int<lower = 1> N;
+  int<lower=1> p;
+  int<lower=1> N;
   real y[N];
   matrix[N, p] X;
 }
 
 parameters {
   vector[p] beta;
-  real<lower = 0, upper = 20> sigma_e;
+  real<lower=0, upper=20> sigma_e;
 }
 
 model {
   beta ~ normal(0, 1);
   sigma_e ~ uniform(0, 20);
   y ~ normal(X * beta, sigma_e); # vectorized!
-}
-
-generated quantities {
-  real y_pred;
-  y_pred <- normal_rng(X * beta, sigma_e);
 }
 '
 {% endhighlight %}
@@ -162,15 +172,12 @@ The corresponding graphical model can be seen in Figure 2.
 
 
 {% highlight r %}
-with(
-  cars,
-  y <- dist,
-  X <- cbind(1, scale(speed, scale = FALSE))
-)
-m <- run_model(y, X, ms_lm)
+y <- cars$dist
+X <- cbind(1, scale(cars$speed, scale = FALSE))
+m <- run_model(y, X, ms_lm, save = TRUE)
 {% endhighlight %}
 
-Regularization is built into the Bayesian framework. For example, using the mode of the posterior distribution as our point estimate  --- commonly called the MAP estimate --- linear regression with Gaussian priors equals ridge regression (see [here](https://stats.stackexchange.com/questions/163388/l2-regularization-is-equivalent-to-gaussian-prior)), while using Laplace priors recovers the lasso (Park & Casella, [2008](http://www.stat.ufl.edu/archived/casella/Papers/Lasso.pdf)).
+Regularization is built into the Bayesian framework. For example, using the mode of the posterior distribution as our point estimate  --- commonly called the MAP estimate --- linear regression with Gaussian priors equals ridge regression (see [here](https://stats.stackexchange.com/questions/163388/l2-regularization-is-equivalent-to-gaussian-prior)), while using Laplace priors recovers the lasso (Park & Casella, [2008](http://www.stat.ufl.edu/archived/casella/Papers/Lasso.pdf)). Bayesian regularization is similar to *penalized likelihood* approaches in classical statistics.
 
 ## Generalized Linear model
 Not all dependent variables are continuous. We might be interested in number of clicks on an online ad (Poisson),
@@ -188,35 +195,12 @@ $$
 
 where $f(.)$ is called the *link function*, and $X_{i.}$ denotes the $i^{\text{th}}$ row of $X$. Note that we model the probability of a success, $p_i$, directly. This requires a link function which maps the continous linear predictor onto the domain [0, 1]. This is vital for prediction, because probabilities below 0 or above 1 do not exist; however, the linear predictor does not know that, as is apparent in the plot below.
 
-
-{% highlight r %}
-N <- 10000
-Xb_TeX <- '$X\\beta$'
-dat <- data.frame(y = seq(0, 1.3, length.out = N), x = seq(0, 10, length.out = N))
-
-find_intersect <- function(dat) {
-  row <- head(which(abs(dat$y - 1) < .0001), 1)
-  dat$x[row]
-}
-
-ggplot(dat, aes(x = x, y = y)) +
-  geom_line(colour = 'skyblue', linetype = 'longdash') +
-  geom_hline(yintercept = 1, color = 'red', linetype = 'dashed') +
-  geom_segment(x = find_intersect(dat), xend = Inf, y = 1, yend = 1, color = 'skyblue') +
-  scale_x_continuous(breaks = scales::pretty_breaks(10)) +
-  ylab('Probability') +
-  xlab(TeX(Xb_TeX)) +
-  ggtitle('Motivation for a link function') +
-  theme(plot.title = element_text(hjust = .5)) +
-  annotate('rect', xmin = -Inf, xmax = Inf, ymin = 1, ymax = Inf, alpha = .2, fill = 'red')
-{% endhighlight %}
-
-<img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-7-1.png" title="plot of chunk unnamed-chunk-7" alt="plot of chunk unnamed-chunk-7" style="display: block; margin: auto;" />
+<img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-8-1.png" title="plot of chunk unnamed-chunk-8" alt="plot of chunk unnamed-chunk-8" style="display: block; margin: auto;" />
 
 ### Logistic regression
 For example, assume a Bernoulli random variable, i.e., a random variable who is either 0 or 1. Our linear predictor, however, is on the continuous domain; we require a mapping between the two, which will be $f^{-1}$, the *inverse link function*. We can use a Sigmoid function to map from the continuous domain of the linear predictor, $Xb$, onto the domain [0, 1]; see the figure below.
 
-<img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-8-1.png" title="plot of chunk unnamed-chunk-8" alt="plot of chunk unnamed-chunk-8" style="display: block; margin: auto;" />
+<img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" style="display: block; margin: auto;" />
 
 Mathematically, the Sigmoid function is
 
@@ -258,7 +242,7 @@ $$
 the mean or expectation of this distribution is $\mathbb{E}[X] = p$, and the variance is $\mathbb{Var}[X] = p (1 - p)$. In contrast to the Gaussian distribution, the variance is not independent of the mean, as can be seen in the plot below.
 
 
-<img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-9-1.png" title="plot of chunk unnamed-chunk-9" alt="plot of chunk unnamed-chunk-9" style="display: block; margin: auto;" />
+<img src="/figure/source/2017-02-20-Bayesian-regression/unnamed-chunk-10-1.png" title="plot of chunk unnamed-chunk-10" alt="plot of chunk unnamed-chunk-10" style="display: block; margin: auto;" />
 
 Homoscedasticity, then, is only the case should conditions A and B have the same $p$, or be equidistant from $p = .5$. For more on this topic, see J?ger ([2008](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2613284/)). Below we run a linear model on percent correct, and then a logistic regression on a trial basis.
 
