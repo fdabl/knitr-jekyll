@@ -3,8 +3,14 @@ layout: about
 ---
 
 # Peer-reviewed articles
+Jakob, L., Garcia-Garzon, E., Jarke, H., & **Dablander, F.** (in preparation). The Science behind the
+Magic: The Relation of Harry Potter Sorting Hat Quiz to Measures of Values and Personality
+
+Brecht, K., Jakob, L., **Dablander, F.**, & Clayton, N. (in preparation). Does Theory of Mind rely on
+Specialized Mechanisms? A Registered Replication of Cohen et al. (2015)
+
 Marsman, M., Waldorp, L., **Dablander, F.**, & Wagenmakers, E.-J. (submitted). Bayesian
-Estimation of Explained Variance in ANOVA Designs. *Scandinavian Journal of Statistics*
+Estimation of Explained Variance in ANOVA Designs.
 
 Etz, A., Gronau, Q. F., **Dablander, F.**, Edelsbrunner, P. A., & Baribault, B. (accepted).
 How to become a Bayesian in eight easy steps: An annotated reading list. *Psychonomic Bulletin and Review*. [[pdf]](https://osf.io/8wkpd/)
